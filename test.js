@@ -1,7 +1,6 @@
 var fs = require('fs');
-var STPClient = require('./stpclient').STPClient;
-var client = new STPClient();
-client.connect('localhost', 3399, function (conn) {
+var client = require('./stpclient').connect('localhost', 3399);
+client.on('connect',  function (conn) {
     console.log('client connected');
     conn.send_request('info', function (data) {
         console.log('resp', data);

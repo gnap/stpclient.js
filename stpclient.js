@@ -1,9 +1,9 @@
 var net = require('net');
+var util = require('util');
+var events = require('events');
 
-var STPClient = function () {
-};
-
-STPClient.prototype.connect = function (host, port, callback) {
+var STPClient = function (host, port) {
+    events.EventEmitter.call(this);
 
     this.host = host;
     this.port = port;
@@ -12,9 +12,10 @@ STPClient.prototype.connect = function (host, port, callback) {
     this._buffer = '';
     this._started = true;
     this._callback = undefined;
-    this._on_connect = callback;
-    this.reconnect();
+    this.connect();
 };
+
+util.inherits(STPClient, events.EventEmitter);
 
 STPClient.prototype.end = function () {
     this._retry = 2;
@@ -24,29 +25,27 @@ STPClient.prototype.end = function () {
     this.client.end();
 };
 
-STPClient.prototype.reconnect = function () {
+STPClient.prototype.connect = function () {
     var self = this;
     this._callback = undefined;
     var client = this.client = net.connect({host: this.host, port: this.port});
     client.on('connect', function () {
         self._retry = 2;
         self._flushQueue();
-        if (self._on_connect) {
-            self._on_connect(self);
-        }
+        self.emit('connect', self);
     });
     client.on('end', function() {
         console.log('client disconnected');
         if (self._started) {
             console.log('reconnecting in', self._retry + 's' );
-            setTimeout(function () {self.reconnect();},
+            setTimeout(function () {self.connect();},
                 1000*(self._retry = 2*self._retry));
         }
     });
     client.on('error', function() {
         console.log('reconnecting in', self._retry + 's' );
         if (self._started) {
-            setTimeout(function () {self.reconnect();},
+            setTimeout(function () {self.connect();},
                 1000*(self._retry = 2*self._retry));
         }
     });
@@ -74,7 +73,6 @@ STPClient.prototype.reconnect = function () {
 STPClient.prototype.send_request = function (arg, callback) {
     this._queue.push([arg, callback]);
     this._flushQueue();
-    //this.client.write(data.length + '\r\n' + data+'\r\n\r\n');
 };
 
 STPClient.prototype._flushQueue = function () {
@@ -101,3 +99,6 @@ STPClient.prototype._flushQueue = function () {
 };
 
 exports.STPClient =  STPClient;
+exports.connect =  function (host, port) {
+    return new STPClient(host, port);
+};
