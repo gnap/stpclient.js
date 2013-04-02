@@ -29,11 +29,11 @@ STPClient.prototype.reconnect = function () {
     this._callback = undefined;
     var client = this.client = net.connect({host: this.host, port: this.port});
     client.on('connect', function () {
-          self._retry = 2;
-                self._flushQueue();
-                if (self._on_connect) {
-                    self._on_connect(self);
-                }
+        self._retry = 2;
+        self._flushQueue();
+        if (self._on_connect) {
+            self._on_connect(self);
+        }
     });
     client.on('end', function() {
         console.log('client disconnected');
