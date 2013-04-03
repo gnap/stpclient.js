@@ -1,0 +1,6 @@
+{
+    "version": "0.0.1",
+    "name": "stpclient",
+    "description": "node.js implementation of stp client.",
+    "main": "stpclient.js"
+}
