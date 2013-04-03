@@ -54,10 +54,23 @@
             self._buffer += data.toString();
             var eof = self._buffer.indexOf('\r\n\r\n');
             if (eof != -1) {
-                var sliced = self._buffer.slice(0, eof).split('\r\n');
+                var parts = self._buffer.slice(0, eof + 2);
                 var response = [];
-                for (var i = 1; i < sliced.length; i+=2) {
-                    response.push(sliced[i]);
+                while (parts) {
+                    var num_ends = parts.indexOf('\r\n');
+                    if (num_ends != -1) {
+                        var length = parseInt(parts.slice(0, num_ends), 10);
+                        if (length) {
+                            response.push(parts.slice(num_ends + 2, num_ends + 2 + length));
+                            parts = parts.slice(num_ends + 4 + length, parts.length);
+                        } else {
+                            console.log('invalid response', parts);
+                            break;
+                        }
+                    } else {
+                        console.log('invalid response', parts);
+                        break;
+                    }
                 }
 
                 self._buffer = '';
